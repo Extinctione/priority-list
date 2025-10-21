@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Priority Matrix</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #ffe9f0, #fff5f8);
+    color: #3a3a3a;
+    text-align: center;
+    padding: 2em;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1 {
+    color: #e75480;
+    font-size: 2em;
+    margin-bottom: 0.3em;
+  }
+  p {
+    margin-bottom: 1em;
+  }
+  textarea {
+    width: 280px;
+    height: 110px;
+    border: 2px solid #f7bfd2;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+    font-size: 14px;
+    outline: none;
+    resize: none;
+    transition: 0.3s;
+  }
+  textarea:focus {
+    border-color: #e75480;
+    box-shadow: 0 0 8px #f3b5c8;
+  }
+  button {
+    background: linear-gradient(135deg, #ff9abb, #e75480);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    margin: 8px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 3px 10px rgba(231, 84, 128, 0.25);
+    transition: all 0.25s ease;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(231, 84, 128, 0.35);
+  }
+  .card {
+    background: #fff;
+    padding: 1.8em;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    width: 320px;
+    margin: 1.5em auto;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .card.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #result h3 {
+    color: #e75480;
+    margin-bottom: 0.5em;
+  }
+</style>
+</head>
+<body>
+  <h1> Priority List</h1>
+  <p>Enter your tasks below, one per line:</p>
+
+  <div id="inputCard" class="card active">
+    <textarea id="tasks" placeholder="e.g.&#10;Study&#10;Laundry&#10;Workout"></textarea><br>
+    <button id="start">Start</button>
+  </div>
+
+  <div id="compareCard" class="card">
+    <p id="question"></p>
+    <button id="a"></button>
+    <button id="b"></button>
+  </div>
+
+  <div id="resultCard" class="card"></div>
+
+<script>
+  const inputCard = document.getElementById("inputCard");
+  const compareCard = document.getElementById("compareCard");
+  const resultCard = document.getElementById("resultCard");
+  const tasksBox = document.getElementById("tasks");
+  const q = document.getElementById("question");
+  const aBtn = document.getElementById("a");
+  const bBtn = document.getElementById("b");
+  const startBtn = document.getElementById("start");
+
+  let tasks = [], scores = {}, pairs = [], index = 0;
+
+  startBtn.onclick = () => {
+    tasks = tasksBox.value.trim().split(/\n+/).map(t => t.trim()).filter(Boolean);
+    if (tasks.length < 2) return alert("Add at least two tasks!");
+    scores = Object.fromEntries(tasks.map(t => [t, 0]));
+    pairs = [];
+    for (let i = 0; i < tasks.length; i++)
+      for (let j = i + 1; j < tasks.length; j++)
+        pairs.push([tasks[i], tasks[j]]);
+    index = 0;
+    showTransition(inputCard, compareCard);
+    showPair();
+  };
+
+  function showPair() {
+    if (index >= pairs.length) return showResult();
+    const [A, B] = pairs[index];
+    q.textContent = "Which task is more important right now?";
+    aBtn.textContent = A;
+    bBtn.textContent = B;
+  }
+
+  aBtn.onclick = () => { scores[pairs[index][0]]++; index++; showPair(); };
+  bBtn.onclick = () => { scores[pairs[index][1]]++; index++; showPair(); };
+
+  function showResult() {
+    showTransition(compareCard, resultCard);
+    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    resultCard.innerHTML = `
+      <h3> Your Priority Order</h3>
+      ${sorted.map(([t], i) => `${i + 1}. ${t}`).join("<br>")}
+      <br><br>
+      <button onclick="restart()">Restart</button>
+    `;
+  }
+
+  function restart() {
+    showTransition(resultCard, inputCard);
+    tasksBox.value = "";
+  }
+
+  function showTransition(hide, show) {
+    hide.classList.remove("active");
+    setTimeout(() => {
+      hide.style.display = "none";
+      show.style.display = "block";
+      setTimeout(() => show.classList.add("active"), 50);
+    }, 400);
+  }
+</script>
+</body>
+</html>
